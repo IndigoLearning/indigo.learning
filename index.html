@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indigo.Learning</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      position: relative;
+      z-index: 2;
+    }
+    .coin-counter, .level-counter {
+      font-size: 1.2rem;
+      margin: 0.3rem 0;
+      font-weight: bold;
+    }
+    .question {
+      font-size: 2rem;
+      margin: 1rem 0;
+    }
+    input[type="number"] {
+      font-size: 1.5rem;
+      padding: 0.5rem;
+      border-radius: 10px;
+      border: none;
+      width: 120px;
+      text-align: center;
+    }
+    button {
+      background-color: #ffd700;
+      color: #000;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+      background-color: #ffec8b;
+    }
+    .result {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+      font-weight: bold;
+      min-height: 1.5rem;
+    }
+    .credit {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    canvas.confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <header>🌟 Indigo.Learning 🌟</header>
+  <div class="container">
+    <div class="coin-counter">💰 Coins: <span id="coins">0</span></div>
+    <div class="level-counter">📈 Level: <span id="level">1</span></div>
+    <div class="question" id="question">Loading...</div>
+    <input type="number" step="any" id="answer" placeholder="Your answer">
+    <br>
+    <button onclick="checkAnswer()">Check Answer ✅</button>
+    <div class="result" id="result"></div>
+    <div class="credit">Made with ❤️ by Justin Valencia</div>
+  </div>
+  <canvas class="confetti" id="confettiCanvas"></canvas>
+
+  <script>
+    let coins = parseInt(localStorage.getItem('coins')) || 0;
+    let level = parseInt(localStorage.getItem('level')) || 1;
+    let num1, num2, correctAnswer;
+
+    document.getElementById('coins').textContent = coins;
+    document.getElementById('level').textContent = level;
+
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const ctx = confettiCanvas.getContext('2d');
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+
+    let confetti = [];
+
+    function startConfetti() {
+      confetti = Array.from({ length: 100 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 6 + 2,
+        d: Math.random() * 1 + 1,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        tilt: Math.random() * 10,
+        tiltAngle: Math.random() * 0.1
+      }));
+      animateConfetti();
+      setTimeout(() => confetti = [], 1500);
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confetti.forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.ellipse(p.x, p.y, p.r, p.r / 2, p.tilt, 0, Math.PI * 2);
+        ctx.fill();
+        p.y += p.d;
+        p.x += Math.sin(p.tilt);
+        p.tilt += p.tiltAngle;
+      });
+      if (confetti.length > 0) requestAnimationFrame(animateConfetti);
+    }
+
+    function generateQuestion() {
+      const maxNumber = level * 10;
+      num1 = (Math.random() * maxNumber).toFixed(1);
+      num2 = (Math.random() * maxNumber).toFixed(1);
+      correctAnswer = (parseFloat(num1) + parseFloat(num2)).toFixed(1);
+      document.getElementById('question').textContent = `${num1} + ${num2} = ?`;
+      document.getElementById('answer').value = '';
+      document.getElementById('result').textContent = '';
+    }
+
+    function checkAnswer() {
+      const userAnswer = parseFloat(document.getElementById('answer').value).toFixed(1);
+      if (userAnswer === correctAnswer) {
+        coins++;
+        if (coins % 5 === 0) {
+          level++;
+          localStorage.setItem('level', level);
+          document.getElementById('level').textContent = level;
+        }
+        localStorage.setItem('coins', coins);
+        document.getElementById('coins').textContent = coins;
+        document.getElementById('result').textContent = '✅ Correct!';
+        document.getElementById('result').style.color = '#90ee90';
+        startConfetti();
+      } else {
+        document.getElementById('result').textContent = `❌ Wrong! The correct answer was ${correctAnswer}`;
+        document.getElementById('result').style.color = '#ff7f7f';
+      }
+      setTimeout(generateQuestion, 1500);
+    }
+
+    generateQuestion();
+  </script>
+</body>
+</html>
